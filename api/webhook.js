@@ -1,49 +1,43 @@
 const axios = require("axios");
 
 module.exports = async (req, res) => {
-  if (req.method !== "POST") {
-    res.status(405).json({ error: "Method not allowed" });
-    return;
-  }
-
-  console.log("Solicitud recibida en /api/webhook:", req.body);
-
-  const { from, body } = req.body; // Datos enviados desde el cliente
-
   try {
-    // Llamada a la API de OpenAI
+    if (req.method !== "POST") {
+      return res.status(405).send("Method not allowed");
+    }
+
+    const { from, body } = req.body;
+
+    if (!from || !body) {
+      return res.status(400).send("Faltan datos en la solicitud.");
+    }
+
+    // Llamada a OpenAI
     const response = await axios.post(
       "https://api.openai.com/v1/chat/completions",
       {
         model: "gpt-3.5-turbo",
         messages: [
-          { role: "system", content: "Eres un asistente útil y respondes preguntas." },
+          { role: "system", content: "Eres un asistente útil." },
           { role: "user", content: body }
         ],
         temperature: 0.7,
       },
       {
         headers: {
+          "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`,
           "Content-Type": "application/json",
-          Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
         }
       }
     );
 
     const reply = response.data.choices[0].message.content;
-
-    // Respuesta estructurada para GoHighLevel
-    res.json({ reply }); // Envía sólo la respuesta generada
+    return res.status(200).json({ reply });
   } catch (error) {
-    console.error("=== ERROR DETECTADO ===");
-    console.error(error.message);
-
+    console.error("Error en el servidor:", error.message);
     if (error.response) {
-      console.error("Detalles del error de OpenAI:", error.response.data);
-      res.status(error.response.status).json({ error: error.response.data });
-    } else {
-      console.error("Error general:", error.message);
-      res.status(500).json({ error: "Hubo un error en el servidor." });
+      console.error("Detalles:", error.response.data);
     }
+    return res.status(500).send("Hubo un error en el servidor.");
   }
 };
