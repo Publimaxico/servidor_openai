@@ -1,43 +1,64 @@
+const express = require("express");
 const axios = require("axios");
 
-module.exports = async (req, res) => {
+const app = express();
+app.use(express.json());
+
+// Clave de API de OpenAI
+const OPENAI_API_KEY = "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";
+
+// Ruta para el webhook
+app.post("/webhook", async (req, res) => {
+  console.log("Solicitud recibida en /api/webhook:", req.body);
+
+  // Ajusta cómo extraes el mensaje del body
+  const { phone, message } = req.body;
+  const body = message?.body; // Asegúrate de que `message.body` exista
+
+  if (!body) {
+    res.status(400).json({ error: "El contenido del mensaje no está presente." });
+    return;
+  }
+
   try {
-    if (req.method !== "POST") {
-      return res.status(405).send("Method not allowed");
-    }
-
-    const { from, body } = req.body;
-
-    if (!from || !body) {
-      return res.status(400).send("Faltan datos en la solicitud.");
-    }
-
-    // Llamada a OpenAI
+    // Llamada a la API de OpenAI
     const response = await axios.post(
       "https://api.openai.com/v1/chat/completions",
       {
         model: "gpt-3.5-turbo",
         messages: [
-          { role: "system", content: "Eres un asistente útil." },
-          { role: "user", content: body }
+          { role: "system", content: "Eres un asistente útil y respondes preguntas." },
+          { role: "user", content: body }, // Usa el contenido del mensaje recibido
         ],
         temperature: 0.7,
       },
       {
         headers: {
-          "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`,
           "Content-Type": "application/json",
-        }
+          Authorization: `Bearer ${OPENAI_API_KEY}`,
+        },
       }
     );
 
+    // Respuesta generada por OpenAI
     const reply = response.data.choices[0].message.content;
-    return res.status(200).json({ reply });
+    console.log(`Respuesta generada para ${phone}: ${reply}`);
+    res.json({ reply }); // Envía la respuesta al cliente
   } catch (error) {
-    console.error("Error en el servidor:", error.message);
+    console.error("=== ERROR DETECTADO ===");
+    console.error("Mensaje del error:", error.message);
+
     if (error.response) {
-      console.error("Detalles:", error.response.data);
+      console.error("Detalles del error de OpenAI:", error.response.data);
+      console.error("Estado HTTP:", error.response.status);
+    } else {
+      console.error("Error general:", error.message);
     }
-    return res.status(500).send("Hubo un error en el servidor.");
+
+    res.status(500).send("Hubo un error en el servidor."); // Respuesta en caso de error
   }
-};
+});
+
+// Configuración del puerto dinámico de Vercel
+const port = process.env.PORT || 4000;
+app.listen(port, () => console.log(`Servidor corriendo en el puerto ${port}`));
