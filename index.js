@@ -9,6 +9,8 @@ const OPENAI_API_KEY = "sk-proj-akcUKDy5u27JhpmR61v5EglAdXoL4_WmXR0RMVJCY0AZ1HKc
 
 // Ruta para el webhook
 app.post("/webhook", async (req, res) => {
+  console.log("Solicitud recibida en /webhook:", req.body); // Log para depuración
+
   const { from, body } = req.body; // Datos enviados desde el cliente
 
   try {
@@ -33,20 +35,20 @@ app.post("/webhook", async (req, res) => {
 
     // Respuesta generada por OpenAI
     const reply = response.data.choices[0].message.content;
-    console.log(`Respuesta para ${from}: ${reply}`);
-    res.json({ reply });
+    console.log(`Respuesta generada para ${from}: ${reply}`);
+    res.json({ reply }); // Enviar respuesta al cliente
   } catch (error) {
     console.error("=== ERROR DETECTADO ===");
-    console.error("Mensaje:", error.message);
+    console.error("Mensaje del error:", error.message);
 
     if (error.response) {
-      console.error("Datos de respuesta de OpenAI:", error.response.data);
+      console.error("Detalles del error de OpenAI:", error.response.data);
       console.error("Estado HTTP:", error.response.status);
     } else {
-      console.error("No hubo respuesta de OpenAI. Error general:", error.message);
+      console.error("Error general:", error.message);
     }
 
-    res.status(500).send("Hubo un error en el servidor.");
+    res.status(500).send("Hubo un error en el servidor."); // Respuesta en caso de error
   }
 });
 
