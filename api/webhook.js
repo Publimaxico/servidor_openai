@@ -1,27 +1,34 @@
 const axios = require("axios");
 
 module.exports = async (req, res) => {
+  // Verificar que sea un POST
   if (req.method !== "POST") {
     res.status(405).send("Method not allowed");
     return;
   }
 
-  console.log("Solicitud recibida en /api/webhook:", req.body); // Log para depuración
-
-  // Verificar si la API Key está disponible
-  console.log("Valor de OPENAI_API_KEY:", process.env.OPENAI_API_KEY);
-
-  const { from, body } = req.body; // Datos enviados desde el cliente
-
   try {
+    // Parsear el cuerpo de la solicitud (necesario en Vercel si no se maneja automáticamente)
+    const body = JSON.parse(req.body);
+
+    console.log("Solicitud recibida en /api/webhook:", body); // Log para depuración
+
+    const { from, body: userMessage } = body; // Datos enviados desde el cliente
+
+    // Validar que los campos necesarios existen
+    if (!from || !userMessage) {
+      res.status(400).send("Solicitud inválida. Faltan datos obligatorios.");
+      return;
+    }
+
     // Llamada a la API de OpenAI
     const response = await axios.post(
       "https://api.openai.com/v1/chat/completions",
       {
-        model: "gpt-3.5-turbo", // Modelo de OpenAI
+        model: "gpt-3.5-turbo",
         messages: [
           { role: "system", content: "Eres un asistente útil y respondes preguntas." },
-          { role: "user", content: body }, // El contenido enviado en el mensaje
+          { role: "user", content: userMessage },
         ],
         temperature: 0.7,
       },
@@ -34,9 +41,9 @@ module.exports = async (req, res) => {
     );
 
     // Respuesta generada por OpenAI
-   const reply = response.data.choices[0].message.content; // Extraer el contenido del mensaje
-console.log(`Respuesta generada para ${from}: ${reply}`);
-res.json({ reply });
+    const reply = response.data.choices[0].message.content;
+    console.log(`Respuesta generada para ${from}: ${reply}`);
+    res.json({ reply }); // Enviar respuesta al cliente
   } catch (error) {
     console.error("=== ERROR DETECTADO ===");
     console.error("Mensaje del error:", error.message);
