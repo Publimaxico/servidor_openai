@@ -12,10 +12,9 @@ app.post("/api/webhook", async (req, res) => {
   console.log("Solicitud recibida en /api/webhook:", req.body);
 
   // Extraer el cuerpo del mensaje
-  const messageBody = req.body.message?.body; // Usar optional chaining para evitar errores
+  const messageBody = req.body.message?.body; // Usar optional chaining
 
   if (!messageBody) {
-    // Validar si el mensaje está presente
     console.error("Mensaje vacío o no válido.");
     return res.status(400).send("Mensaje vacío o no válido.");
   }
@@ -43,7 +42,17 @@ app.post("/api/webhook", async (req, res) => {
     // Respuesta generada por OpenAI
     const reply = response.data.choices[0].message.content;
     console.log(`Respuesta generada: ${reply}`);
-    res.json({ reply });
+
+    // Responder directamente a GHL en el formato esperado
+    res.json({
+      fulfillmentMessages: [
+        {
+          text: {
+            text: [reply] // Incluir la respuesta generada
+          }
+        }
+      ]
+    });
   } catch (error) {
     console.error("=== ERROR DETECTADO ===");
     console.error("Mensaje del error:", error.message);
