@@ -44,15 +44,16 @@ app.post("/api/webhook", async (req, res) => {
     console.log(`Respuesta generada: ${reply}`);
 
     // Responder directamente a GHL en el formato esperado
-    res.json({
-      fulfillmentMessages: [
-        {
-          text: {
-            text: [reply] // Incluir la respuesta generada
-          }
-        }
-      ]
-    });
+   res.status(200).json({
+  fulfillmentMessages: [
+    {
+      text: {
+        text: [reply] // Respuesta generada por OpenAI
+      }
+    }
+  ]
+});
+
   } catch (error) {
     console.error("=== ERROR DETECTADO ===");
     console.error("Mensaje del error:", error.message);
