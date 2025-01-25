@@ -7,18 +7,19 @@ app.use(express.json());
 // Reemplaza "TU_API_KEY" con tu clave de OpenAI
 const OPENAI_API_KEY = "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";
 
-app.post("/chat", async (req, res) => {
-  const userMessage = req.body.message; // Mensaje recibido del cliente
+// Ruta para el webhook
+app.post("/webhook", async (req, res) => {
+  const { from, body } = req.body; // Datos enviados desde el cliente
 
   try {
     // Llamada a la API de OpenAI
     const response = await axios.post(
       "https://api.openai.com/v1/chat/completions",
       {
-        model: "gpt-3.5-turbo", // Cambia a "gpt-3.5-turbo" si prefieres
+        model: "gpt-3.5-turbo", // Modelo de OpenAI
         messages: [
           { role: "system", content: "Eres un asistente útil y respondes preguntas." },
-          { role: "user", content: userMessage }
+          { role: "user", content: body } // El contenido enviado en el mensaje
         ],
         temperature: 0.7,
       },
@@ -32,6 +33,7 @@ app.post("/chat", async (req, res) => {
 
     // Respuesta generada por OpenAI
     const reply = response.data.choices[0].message.content;
+    console.log(`Respuesta para ${from}: ${reply}`);
     res.json({ reply });
   } catch (error) {
     console.error("=== ERROR DETECTADO ===");
@@ -48,4 +50,6 @@ app.post("/chat", async (req, res) => {
   }
 });
 
-app.listen(4000, () => console.log("Servidor corriendo en el puerto 4000"));
+// Configuración del puerto dinámico de Vercel
+const port = process.env.PORT || 4000;
+app.listen(port, () => console.log(`Servidor corriendo en el puerto ${port}`));
