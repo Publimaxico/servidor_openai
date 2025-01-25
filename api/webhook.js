@@ -44,7 +44,8 @@ app.post("/api/webhook", async (req, res) => {
     console.log(`Respuesta generada: ${reply}`);
 
     // Responder directamente a GHL en el formato esperado
- res.status(200).send(reply); // Enviar solo el texto de la respuesta
+ res.status(200).send("Mensaje de prueba desde el webhook.");
+
 
 
   } catch (error) {
