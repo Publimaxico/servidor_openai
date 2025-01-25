@@ -5,7 +5,7 @@ const app = express();
 app.use(express.json());
 
 // Reemplaza "TU_API_KEY" con tu clave de OpenAI
-const OPENAI_API_KEY = "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";
+const OPENAI_API_KEY = "process.env.OPENAI_API_KEY";
 
 // Ruta para el webhook
 app.post("/webhook", async (req, res) => {
