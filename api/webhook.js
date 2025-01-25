@@ -8,6 +8,9 @@ module.exports = async (req, res) => {
 
   console.log("Solicitud recibida en /api/webhook:", req.body); // Log para depuración
 
+  // Verificar si la API Key está disponible
+  console.log("Valor de OPENAI_API_KEY:", process.env.OPENAI_API_KEY);
+
   const { from, body } = req.body; // Datos enviados desde el cliente
 
   try {
@@ -31,9 +34,9 @@ module.exports = async (req, res) => {
     );
 
     // Respuesta generada por OpenAI
-    const reply = response.data.choices[0].message.content;
-    console.log(`Respuesta generada para ${from}: ${reply}`);
-    res.json({ reply }); // Enviar respuesta al cliente
+   const reply = response.data.choices[0].message.content; // Extraer el contenido del mensaje
+console.log(`Respuesta generada para ${from}: ${reply}`);
+res.json({ reply });
   } catch (error) {
     console.error("=== ERROR DETECTADO ===");
     console.error("Mensaje del error:", error.message);
