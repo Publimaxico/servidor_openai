@@ -44,14 +44,8 @@ app.post("/api/webhook", async (req, res) => {
     console.log(`Respuesta generada: ${reply}`);
 
     // Responder directamente a GHL en el formato esperado
-   res.status(200).json({
-  fulfillmentMessages: [
-    {
-      text: {
-        text: [reply] // Respuesta generada por OpenAI
-      }
-    }
-  ]
+  res.status(200).json({
+  reply: reply // Devolver solo el campo "reply"
 });
 
   } catch (error) {
