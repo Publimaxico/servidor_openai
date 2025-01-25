@@ -1,15 +1,12 @@
-const express = require("express");
 const axios = require("axios");
 
-const app = express();
-app.use(express.json());
+module.exports = async (req, res) => {
+  if (req.method !== "POST") {
+    res.status(405).send("Method not allowed");
+    return;
+  }
 
-// Reemplaza "TU_API_KEY" con tu clave de OpenAI
-const OPENAI_API_KEY = "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";
-
-// Ruta para el webhook
-app.post("/webhook", async (req, res) => {
-  console.log("Solicitud recibida en /webhook:", req.body); // Log para depuración
+  console.log("Solicitud recibida en /api/webhook:", req.body); // Log para depuración
 
   const { from, body } = req.body; // Datos enviados desde el cliente
 
@@ -21,14 +18,14 @@ app.post("/webhook", async (req, res) => {
         model: "gpt-3.5-turbo", // Modelo de OpenAI
         messages: [
           { role: "system", content: "Eres un asistente útil y respondes preguntas." },
-          { role: "user", content: body } // El contenido enviado en el mensaje
+          { role: "user", content: body }, // El contenido enviado en el mensaje
         ],
         temperature: 0.7,
       },
       {
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${OPENAI_API_KEY}`,
+          Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
         }
       }
     );
@@ -50,8 +47,4 @@ app.post("/webhook", async (req, res) => {
 
     res.status(500).send("Hubo un error en el servidor."); // Respuesta en caso de error
   }
-});
-
-// Configuración del puerto dinámico de Vercel
-const port = process.env.PORT || 4000;
-app.listen(port, () => console.log(`Servidor corriendo en el puerto ${port}`));
+};
