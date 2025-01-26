@@ -4,25 +4,29 @@ const axios = require("axios");
 const app = express();
 app.use(express.json());
 
-// Tu API Key de OpenAI desde las variables de entorno
+// Usar la clave de API de OpenAI desde variables de entorno
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 
+// Ruta para el webhook
 app.post("/api/webhook", async (req, res) => {
-  const messageBody = req.body.message?.body; // Mensaje del cliente
-  const contactPhone = req.body.phone; // Teléfono del cliente
+  console.log("Solicitud recibida en /api/webhook:", req.body);
 
-  if (!messageBody || !contactPhone) {
-    return res.status(400).send("Faltan datos necesarios.");
+  // Extraer el cuerpo del mensaje
+  const messageBody = req.body.message?.body;
+
+  if (!messageBody) {
+    console.error("Mensaje vacío o no válido.");
+    return res.status(400).send("Mensaje vacío o no válido.");
   }
 
   try {
-    // Llamar a OpenAI para generar la respuesta
+    // Llamar a la API de OpenAI
     const response = await axios.post(
       "https://api.openai.com/v1/chat/completions",
       {
         model: "gpt-3.5-turbo",
         messages: [
-          { role: "system", content: "Eres un asistente útil que responde preguntas." },
+          { role: "system", content: "Eres un asistente útil y respondes preguntas." },
           { role: "user", content: messageBody }
         ],
         temperature: 0.7
@@ -35,25 +39,32 @@ app.post("/api/webhook", async (req, res) => {
       }
     );
 
-    const reply = response.data.choices[0].message.content; // Respuesta generada por OpenAI
+    // Respuesta generada por OpenAI
+    const reply = response.data.choices[0].message.content;
+    console.log(`Respuesta generada: ${reply}`);
 
-    // Enviar la respuesta a Zapier
-    const ZAPIER_WEBHOOK_URL = "https://hooks.zapier.com/hooks/catch/21450137/2f3ey0j/"; // Sustituye con tu URL de Zapier
-    await axios.post(ZAPIER_WEBHOOK_URL, {
-      contact_phone: contactPhone,
-      response: reply // Respuesta generada
+    // Devolver la respuesta en el formato esperado por GHL
+    res.status(200).json({
+      fulfillmentMessages: [
+        {
+          text: {
+            text: [reply]
+          }
+        }
+      ]
     });
-
-    console.log("Respuesta enviada correctamente a Zapier.");
-    res.status(200).send("Respuesta enviada a Zapier.");
   } catch (error) {
-    console.error("Error al procesar la solicitud:", error.message);
+    console.error("=== ERROR DETECTADO ===");
+    console.error("Mensaje del error:", error.message);
 
     if (error.response) {
-      console.error("Detalles del error:", error.response.data);
+      console.error("Detalles del error de OpenAI:", error.response.data);
+      console.error("Estado HTTP:", error.response.status);
+    } else {
+      console.error("Error general:", error.message);
     }
 
-    res.status(500).send("Error al procesar la solicitud.");
+    res.status(500).send("Hubo un error en el servidor.");
   }
 });
 
