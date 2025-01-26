@@ -38,7 +38,7 @@ app.post("/api/webhook", async (req, res) => {
     const reply = response.data.choices[0].message.content; // Respuesta generada por OpenAI
 
     // Enviar la respuesta a Zapier
-    const ZAPIER_WEBHOOK_URL = "https://hooks.zapier.com/hooks/catch/XXXXX"; // Sustituye con tu URL de Zapier
+    const ZAPIER_WEBHOOK_URL = "https://hooks.zapier.com/hooks/catch/21450137/2f3ey0j/"; // Sustituye con tu URL de Zapier
     await axios.post(ZAPIER_WEBHOOK_URL, {
       contact_phone: contactPhone,
       response: reply // Respuesta generada
